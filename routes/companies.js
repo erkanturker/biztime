@@ -26,10 +26,18 @@ router.get("/:code", async (req, res, next) => {
       throw new ExpressError("The company was not found", 404);
 
     const { name, description } = resp.rows[0];
+    const invoices = resp.rows.map((r) => ({
+      id: r.id,
+      comp_code: r.comp_code,
+      amt: r.amt,
+      paid: r.paid,
+      add_date: r.add_date,
+      paid_date: r.paid_date,
+    }));
 
     return res.json({
       company: { code, name, description },
-      invoices: resp.rows,
+      invoices,
     });
   } catch (error) {
     return next(error);
@@ -40,7 +48,7 @@ router.post("/", async (req, res, next) => {
   try {
     const { code, name, description } = req.body;
     if (!code || !name || !description)
-      throw new ExpressError("code,name and descripton required", 400);
+      throw new ExpressError("code,name and description required", 400);
 
     const resp = await db.query(
       `INSERT INTO companies (code, name, description) VALUES ($1,$2,$3) RETURNING *`,
