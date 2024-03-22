@@ -13,7 +13,7 @@ beforeEach(async () => {
     RETURNING code,name,description`
   );
   invoice = await db.query(`INSERT INTO invoices
-  (comp_Code, amt, paid, paid_date)
+  (comp_code, amt, paid, paid_date)
   VALUES ('tesla', 100, false, null) RETURNING *`);
 });
 

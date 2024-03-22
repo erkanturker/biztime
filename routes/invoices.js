@@ -24,13 +24,13 @@ router.get("/:id", async (req, res, next) => {
     );
 
     if (resp.rows.length === 0)
-      throw new ExpressError("The company was not found", 404);
+      throw new ExpressError("The invoice was not found", 404);
 
     const { amt, paid, add_date, paid_date, code, name, description } =
       resp.rows[0];
 
     return res.json({
-      invoice: { id, amt, paid, add_date, paid_date },
+      invoice: { id, comp_code: code, amt, paid, add_date, paid_date },
       company: { code, name, description },
     });
   } catch (error) {
@@ -49,7 +49,7 @@ router.post("/", async (req, res, next) => {
       [comp_code, amt]
     );
 
-    return res.json({ invoices: resp.rows[0] });
+    return res.json({ invoice: resp.rows[0] });
   } catch (error) {
     return next(error);
   }
@@ -59,13 +59,16 @@ router.put("/:id", async (req, res, next) => {
   try {
     const { amt } = req.body;
     const { id } = req.params;
-    if (!amt)
-      throw new ExpressError("comp_code and amt fields are required", 400);
+    if (!amt) throw new ExpressError("amt fields are required", 400);
 
     const resp = await db.query(
       `UPDATE invoices SET amt=$1 WHERE id=$2 RETURNING *`,
       [amt, id]
     );
+
+    if (resp.rows.length === 0)
+      throw new ExpressError("The invoice was not found", 404);
+
     return res.json({ invoice: resp.rows[0] });
   } catch (error) {
     return next(error);
@@ -80,7 +83,7 @@ router.delete("/:id", async (req, res, next) => {
       [id]
     );
     if (resp.rows.length === 0)
-      throw new ExpressError("The company was not found", 404);
+      throw new ExpressError("The invoice was not found", 404);
     return res.json({ status: "deleted" });
   } catch (error) {
     return next(error);
