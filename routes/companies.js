@@ -26,6 +26,16 @@ router.get("/:code", async (req, res, next) => {
     if (resp.rows.length === 0)
       throw new ExpressError("The company was not found", 404);
 
+    const industries = await db.query(
+      `SELECT  i.industry
+    FROM companies AS c
+    LEFT JOIN industry_company AS ic
+    ON c.code=ic.company_code
+    LEFT JOIN industries AS i ON i.code =ic.industry_code
+    WHERE c.code=$1`,
+      [code]
+    );
+
     const { name, description } = resp.rows[0];
     const invoices = resp.rows.map((r) => ({
       id: r.id,
@@ -36,8 +46,11 @@ router.get("/:code", async (req, res, next) => {
       paid_date: r.paid_date,
     }));
 
+    respIndustries = industries.rows.map((i) => i.industry);
+
     return res.json({
       company: { code, name, description },
+      industries: respIndustries,
       invoices,
     });
   } catch (error) {
