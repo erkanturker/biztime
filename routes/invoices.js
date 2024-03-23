@@ -57,14 +57,27 @@ router.post("/", async (req, res, next) => {
 
 router.put("/:id", async (req, res, next) => {
   try {
-    const { amt } = req.body;
+    let { amt, paid } = req.body;
     const { id } = req.params;
+    let resp;
+
     if (!amt) throw new ExpressError("amt fields are required", 400);
 
-    const resp = await db.query(
-      `UPDATE invoices SET amt=$1 WHERE id=$2 RETURNING *`,
-      [amt, id]
-    );
+    if (paid) {
+      const paidDate = new Date().toISOString();
+
+      resp = await db.query(
+        `UPDATE invoices SET amt=$1,paid=$2, paid_date=$3 WHERE id=$4 RETURNING *`,
+        [amt, paid, paidDate, id]
+      );
+    } else {
+      if (paid === undefined) paid = false;
+
+      resp = await db.query(
+        `UPDATE invoices SET amt=$1,paid=$2, paid_date=null WHERE id=$3 RETURNING *`,
+        [amt, paid, id]
+      );
+    }
 
     if (resp.rows.length === 0)
       throw new ExpressError("The invoice was not found", 404);
