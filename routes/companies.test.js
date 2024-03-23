@@ -44,6 +44,7 @@ describe("GET /companies/:code", () => {
     }));
     expect(resp.body).toEqual({
       company: expectedCompany,
+      industries: expect.any(Array),
       invoices: expectedinvoice,
     });
   });
